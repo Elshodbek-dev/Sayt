@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shabbonaga — bir umr davom etadigan xat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2B1B24;
+    --paper:#F6EEE0;
+    --paper-soft:#EFE3CF;
+    --plum:#3B1F2E;
+    --plum-deep:#2A1520;
+    --gold:#B9922F;
+    --gold-light:#D9BB6E;
+    --rose:#C97B84;
+    --thread:#8A3B46;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Manrope', sans-serif;
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  h1,h2,h3{ font-family:'Cormorant Garamond', serif; font-weight:600; }
+  .note{ font-family:'Caveat', cursive; }
+  ::selection{ background:var(--gold-light); color:var(--plum-deep); }
+
+  /* ---------- stitched thread divider (signature motif) ---------- */
+  .thread{
+    height:28px;
+    background-image: repeating-linear-gradient(90deg, var(--thread) 0 10px, transparent 10px 20px);
+    background-size: 20px 2px;
+    background-repeat: repeat-x;
+    background-position: center;
+    opacity:.55;
+    position:relative;
+  }
+  .thread::before, .thread::after{
+    content:"❖";
+    position:absolute; top:50%; transform:translateY(-50%);
+    color:var(--gold); font-size:14px;
+  }
+  .thread::before{ left:calc(50% - 120px); }
+  .thread::after{ left:calc(50% + 106px); }
+
+  /* ---------- ENVELOPE / HERO ---------- */
+  #envelope-screen{
+    position:fixed; inset:0; z-index:50;
+    background: radial-gradient(circle at 50% 30%, #4a2438, var(--plum-deep));
+    display:flex; align-items:center; justify-content:center;
+    transition: opacity .9s ease, visibility .9s ease;
+  }
+  #envelope-screen.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+  .envelope{
+    width:min(84vw, 380px);
+    aspect-ratio: 3/2;
+    position:relative;
+    cursor:pointer;
+    filter: drop-shadow(0 20px 40px rgba(0,0,0,.5));
+  }
+  .env-body{
+    position:absolute; inset:0;
+    background: linear-gradient(180deg, var(--paper-soft), var(--paper));
+    border-radius:6px;
+  }
+  .env-flap{
+    position:absolute; top:0; left:0; width:100%; height:60%;
+    background: linear-gradient(160deg, var(--rose), var(--thread));
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    transform-origin: top;
+    transition: transform 1s cubic-bezier(.6,-0.2,.2,1.3);
+    z-index:3;
+  }
+  .envelope.open .env-flap{ transform: rotateX(180deg); }
+  .env-seal{
+    position:absolute; top:38%; left:50%; transform:translate(-50%,-50%);
+    width:auto; min-width:60px; height:52px; padding:0 16px; border-radius:26px;
+    background: radial-gradient(circle at 35% 30%, var(--gold-light), var(--gold) 70%);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Cormorant Garamond', serif; font-style:italic; color:var(--plum-deep);
+    font-size:16px; white-space:nowrap; z-index:4;
+    box-shadow: 0 3px 8px rgba(0,0,0,.35);
+    transition: opacity .4s ease .3s, transform .4s ease .3s;
+  }
+  .envelope.open .env-seal{ opacity:0; transform:translate(-50%,-50%) scale(.5); }
+  .env-hint{
+    position:absolute; bottom:-42px; left:0; right:0; text-align:center;
+    color:var(--paper-soft); font-size:14px; letter-spacing:.04em;
+    opacity:.85;
+  }
+  .env-letter{
+    position:absolute; left:6%; right:6%; bottom:4%;
+    height:0; background:var(--paper);
+    border-radius:4px 4px 0 0;
+    overflow:hidden; z-index:2;
+    transition: height .9s ease .25s;
+    display:flex; align-items:center; justify-content:center; text-align:center; padding:0 6%;
+  }
+  .envelope.open .env-letter{ height:104%; }
+  .env-letter p{ font-family:'Cormorant Garamond', serif; font-style:italic; font-size:15px; color:var(--plum); opacity:0; transition:opacity .5s ease .9s; }
+  .envelope.open .env-letter p{ opacity:1; }
+
+  /* ---------- SECTIONS ---------- */
+  main{ opacity:0; transition:opacity .8s ease .2s; }
+  main.show{ opacity:1; }
+
+  section{ padding:80px 6vw; max-width:920px; margin:0 auto; }
+
+  .hero-section{
+    text-align:center; padding-top:110px;
+  }
+  .eyebrow{
+    font-size:12px; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--thread); font-weight:700; margin-bottom:14px;
+  }
+  .hero-section h1{ font-size:clamp(34px, 6vw, 56px); color:var(--plum); }
+  .hero-section h1 em{ color:var(--thread); font-style:italic; }
+  .hero-sub{ margin-top:16px; font-size:17px; max-width:520px; margin-left:auto; margin-right:auto; color:#5a4650; }
+
+  .countdown{
+    margin-top:44px; display:flex; gap:18px; justify-content:center; flex-wrap:wrap;
+  }
+  .cd-box{
+    background:var(--plum); color:var(--paper); border-radius:10px;
+    padding:16px 20px; min-width:78px; text-align:center;
+    box-shadow: 0 8px 20px rgba(59,31,46,.25);
+  }
+  .cd-box .num{ font-family:'Cormorant Garamond',serif; font-size:32px; font-weight:600; color:var(--gold-light); }
+  .cd-box .lbl{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; opacity:.8; margin-top:2px; }
+  .wedding-date{ margin-top:14px; font-size:13px; color:var(--thread); letter-spacing:.05em; }
+
+  .section-head{ text-align:center; margin-bottom:44px; }
+  .section-head .eyebrow{ }
+  .section-head h2{ font-size:clamp(26px,4vw,38px); color:var(--plum); }
+  .section-head p{ color:#5a4650; margin-top:8px; font-size:15px; }
+
+  /* Memory timeline */
+  .timeline{ position:relative; padding-left:30px; }
+  .timeline::before{
+    content:""; position:absolute; left:6px; top:6px; bottom:6px; width:2px;
+    background-image: repeating-linear-gradient(180deg, var(--thread) 0 8px, transparent 8px 16px);
+  }
+  .mem{ position:relative; margin-bottom:36px; }
+  .mem::before{
+    content:"✦"; position:absolute; left:-30px; top:2px; color:var(--gold); font-size:14px;
+  }
+  .mem-card{
+    background:var(--paper-soft); border:1px solid #e2d3b6; border-radius:12px; padding:20px 22px;
+    position:relative;
+  }
+  .mem-card::after{
+    content:""; position:absolute; inset:6px; border:1px dashed rgba(138,59,70,.25); border-radius:8px; pointer-events:none;
+  }
+  .mem-date{ font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--thread); font-weight:700; }
+  .mem-card h3{ font-size:21px; color:var(--plum); margin-top:4px; }
+  .mem-card p{ font-size:14.5px; color:#4a3a42; margin-top:6px; }
+  .mem-photo{
+    margin-top:12px; height:150px; border-radius:8px;
+    background: linear-gradient(135deg, #e6d6b8, #d8c19a);
+    background-size:cover; background-position:center;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; color:#8a7550; letter-spacing:.03em;
+    cursor:pointer; position:relative; overflow:hidden;
+    border:1px dashed rgba(138,59,70,.35);
+    transition: filter .2s ease;
+  }
+  .mem-photo:hover{ filter:brightness(.96); }
+  .mem-photo.has-img{ border:none; }
+  .mem-photo.has-img .mem-photo-label{ display:none; }
+  .mem-photo input[type=file]{ display:none; }
+  .mem-photo-label{ display:flex; flex-direction:column; align-items:center; gap:4px; pointer-events:none; }
+
+  /* Editable fields */
+  [contenteditable="true"]{
+    outline:none; border-radius:4px; transition:background .15s ease;
+    cursor:text;
+  }
+  [contenteditable="true"]:hover{ background:rgba(138,59,70,.06); }
+  [contenteditable="true"]:focus{ background:rgba(185,146,47,.12); box-shadow:0 0 0 2px rgba(185,146,47,.3); }
+  [contenteditable="true"]:empty::before{ content:attr(data-placeholder); color:#a9998f; }
+
+  .mem-card{ position:relative; }
+  .mem-remove{
+    position:absolute; top:10px; right:10px; width:26px; height:26px; border-radius:50%;
+    background:rgba(138,59,70,.12); color:var(--thread); border:none; font-size:14px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; z-index:2;
+  }
+  .mem-remove:hover{ background:rgba(138,59,70,.25); }
+
+  .add-row{ text-align:center; margin-top:20px; }
+  .btn-add{
+    background:transparent; border:1.5px dashed var(--thread); color:var(--thread);
+    padding:11px 24px; border-radius:30px; font-size:14px; font-weight:700; cursor:pointer;
+    letter-spacing:.02em; transition: background .2s ease;
+  }
+  .btn-add:hover{ background:rgba(138,59,70,.08); }
+
+  .song{ position:relative; }
+  .song-remove{
+    width:22px; height:22px; border-radius:50%; background:rgba(138,59,70,.1); color:var(--thread);
+    border:none; font-size:12px; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  }
+  .song-remove:hover{ background:rgba(138,59,70,.22); }
+  .song-audio-label{
+    font-size:11.5px; color:var(--thread); text-decoration:underline; cursor:pointer; margin-top:4px; display:inline-block;
+  }
+  .song-audio-label input{ display:none; }
+
+  /* Daily reason flip card */
+  .reason-wrap{ display:flex; justify-content:center; }
+  .flip-card{
+    width:min(100%, 440px); aspect-ratio:16/10; perspective:1200px; cursor:pointer;
+  }
+  .flip-inner{
+    position:relative; width:100%; height:100%; transition:transform .7s cubic-bezier(.6,.1,.2,1); transform-style:preserve-3d;
+  }
+  .flip-card.flipped .flip-inner{ transform:rotateY(180deg); }
+  .flip-face{
+    position:absolute; inset:0; backface-visibility:hidden; border-radius:14px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px;
+    box-shadow: 0 14px 30px rgba(59,31,46,.18);
+  }
+  .flip-front{ background: linear-gradient(160deg, var(--rose), var(--thread)); color:var(--paper); }
+  .flip-front .eyebrow{ color:var(--paper); opacity:.75; }
+  .flip-front h3{ font-size:24px; margin-top:6px; }
+  .flip-back{ background:var(--plum); color:var(--paper); transform:rotateY(180deg); }
+  .flip-back p{ font-family:'Cormorant Garamond',serif; font-style:italic; font-size:21px; line-height:1.5; }
+  .flip-back .day-tag{ margin-top:14px; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--gold-light); font-family:'Manrope',sans-serif; font-style:normal; }
+  .flip-hint{ text-align:center; margin-top:14px; font-size:13px; color:var(--thread); }
+
+  /* Songs */
+  .songs{ display:flex; flex-direction:column; gap:14px; }
+  .song{
+    display:flex; align-items:center; gap:16px;
+    background:var(--paper-soft); border:1px solid #e2d3b6; border-radius:12px; padding:14px 18px;
+    cursor:pointer; transition:background .2s ease;
+  }
+  .song:hover{ background:#e9dcc0; }
+  .song-play{
+    width:42px; height:42px; border-radius:50%; background:var(--thread); color:var(--paper);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:15px;
+  }
+  .song-info h3{ font-size:18px; color:var(--plum); }
+  .song-info p{ font-size:13.5px; color:#5a4650; margin-top:2px; }
+  .song-wave{ margin-left:auto; display:flex; gap:3px; align-items:flex-end; height:20px; }
+  .song-wave span{ width:3px; background:var(--gold); border-radius:2px; height:6px; transition:height .2s; }
+  .song.playing .song-wave span{ animation: wave 1s ease-in-out infinite; }
+  .song-wave span:nth-child(1){ animation-delay:0s; }
+  .song-wave span:nth-child(2){ animation-delay:.15s; }
+  .song-wave span:nth-child(3){ animation-delay:.3s; }
+  .song-wave span:nth-child(4){ animation-delay:.45s; }
+  @keyframes wave{ 0%,100%{ height:6px; } 50%{ height:18px; } }
+
+  /* Time capsule */
+  .capsule-box{
+    background:var(--plum); border-radius:16px; padding:36px 30px; color:var(--paper); text-align:center;
+    position:relative; overflow:hidden;
+  }
+  .capsule-box::before{
+    content:""; position:absolute; inset:0;
+    background: repeating-linear-gradient(45deg, rgba(185,146,47,.06) 0 12px, transparent 12px 24px);
+  }
+  .capsule-box h3{ font-size:26px; color:var(--gold-light); position:relative; }
+  .capsule-box p{ font-size:14.5px; opacity:.85; margin-top:8px; max-width:440px; margin-left:auto; margin-right:auto; position:relative; }
+  textarea#capsuleInput{
+    width:100%; max-width:480px; margin-top:20px; min-height:110px; border-radius:10px; border:none;
+    padding:14px 16px; font-family:'Caveat',cursive; font-size:19px; color:var(--plum-deep);
+    background:var(--paper); resize:vertical; position:relative;
+  }
+  .capsule-actions{ margin-top:16px; position:relative; }
+  .btn{
+    background:var(--gold); color:var(--plum-deep); border:none; padding:12px 26px; border-radius:30px;
+    font-weight:700; font-size:14px; cursor:pointer; letter-spacing:.02em;
+  }
+  .btn:hover{ background:var(--gold-light); }
+  .capsule-status{ margin-top:14px; font-size:13px; color:var(--gold-light); opacity:0; transition:opacity .4s ease; position:relative; }
+  .capsule-status.show{ opacity:1; }
+  .capsule-saved-list{ margin-top:22px; text-align:left; max-width:480px; margin-left:auto; margin-right:auto; position:relative; }
+  .capsule-saved-item{ background:rgba(246,238,224,.08); border:1px solid rgba(217,187,110,.25); border-radius:10px; padding:14px 16px; margin-bottom:10px; }
+  .capsule-saved-item p{ font-family:'Caveat',cursive; font-size:18px; opacity:1; color:var(--paper); }
+  .capsule-saved-item span{ display:block; font-size:11px; opacity:.6; margin-top:6px; font-family:'Manrope',sans-serif; }
+
+  footer{ text-align:center; padding:60px 6vw 80px; color:var(--thread); }
+  footer .note{ font-size:22px; }
+  footer .signed{ margin-top:6px; font-size:14px; letter-spacing:.05em; }
+
+  @media (max-width:520px){
+    section{ padding:64px 6vw; }
+    .cd-box{ min-width:64px; padding:12px 14px; }
+    .cd-box .num{ font-size:24px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.01ms !important; transition-duration:.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ENVELOPE INTRO -->
+<div id="envelope-screen">
+  <div>
+    <div class="envelope" id="envelope">
+      <div class="env-letter"><p>"Har bir soniya seni sevishga arziydi..."</p></div>
+      <div class="env-body"></div>
+      <div class="env-flap"></div>
+      <div class="env-seal">Sh &amp; E</div>
+      <div class="env-hint">Muhrni bosing va oching</div>
+    </div>
+  </div>
+</div>
+
+<main id="main">
+
+  <!-- HERO -->
+  <section class="hero-section">
+    <div class="eyebrow">Elshoddan Shabbonaga</div>
+    <h1>Seni sevishning <em>ming bir</em> yo'li bor</h1>
+    <p class="hero-sub">Bu sahifa — bizning xotiralarimiz, sabablarimiz, qo'shiqlarimiz va kelajakka yozilgan xatimiz. Pastga tushib, sekin-asta o'qib chiq.</p>
+
+    <div class="countdown" id="countdown">
+      <div class="cd-box"><div class="num" id="cd-days">--</div><div class="lbl">kun</div></div>
+      <div class="cd-box"><div class="num" id="cd-hours">--</div><div class="lbl">soat</div></div>
+      <div class="cd-box"><div class="num" id="cd-mins">--</div><div class="lbl">daqiqa</div></div>
+      <div class="cd-box"><div class="num" id="cd-secs">--</div><div class="lbl">soniya</div></div>
+    </div>
+    <div class="wedding-date">To'yimizgacha — 23-oktabr, 2027</div>
+  </section>
+
+  <div class="thread"></div>
+
+  <!-- MEMORIES -->
+  <section id="memories">
+    <div class="section-head">
+      <div class="eyebrow">Yo'limiz</div>
+      <h2>Bizning xotiralarimiz</h2>
+      <p>Har bir nuqta — biz birga bosib o'tgan bir kun</p>
+    </div>
+    <div class="timeline" id="timeline"></div>
+    <div class="add-row">
+      <button class="btn-add" id="addMemory">＋ Yangi kun qo'shish</button>
+    </div>
+  </section>
+
+  <div class="thread"></div>
+
+  <!-- DAILY REASON -->
+  <section id="reasons">
+    <div class="section-head">
+      <div class="eyebrow">Har kuni bittadan</div>
+      <h2>Bugun seni nega sevaman</h2>
+      <p>Har kuni yangi sabab — kartani bosib och</p>
+    </div>
+    <div class="reason-wrap">
+      <div class="flip-card" id="flipCard">
+        <div class="flip-inner">
+          <div class="flip-face flip-front">
+            <div class="eyebrow">Bugungi sabab</div>
+            <h3>Bosib och 💌</h3>
+          </div>
+          <div class="flip-face flip-back">
+            <p id="reasonText">...</p>
+            <div class="day-tag" id="reasonDay">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="flip-hint">Ertaga qaytib kelsang — yangi sabab kutadi</p>
+  </section>
+
+  <div class="thread"></div>
+
+  <!-- SONGS -->
+  <section id="songs">
+    <div class="section-head">
+      <div class="eyebrow">Ovozimiz</div>
+      <h2>Bizning qo'shiqlarimiz</h2>
+      <p>Har birining ortida bir xotira bor</p>
+    </div>
+    <div class="songs" id="songList"></div>
+    <div class="add-row">
+      <button class="btn-add" id="addSong">＋ Yangi qo'shiq qo'shish</button>
+    </div>
+  </section>
+
+  <div class="thread"></div>
+
+  <!-- TIME CAPSULE -->
+  <section id="capsule">
+    <div class="section-head">
+      <div class="eyebrow">Kelajakka xat</div>
+      <h2>Vaqt kapsulasi</h2>
+      <p>To'yimizgacha bo'lgan his-tuyg'ularingni yoz — 2027-yil 23-oktabrda birga o'qiymiz</p>
+    </div>
+    <div class="capsule-box">
+      <h3>Shabbona, bugun nima his qilyapsan?</h3>
+      <p>Yozganing shu yerda saqlanadi va to'y kuni ikkalamiz birga ochib o'qiymiz.</p>
+      <textarea id="capsuleInput" placeholder="Bugun..."></textarea>
+      <div class="capsule-actions">
+        <button class="btn" id="capsuleSave">Muhrlab saqlash</button>
+      </div>
+      <div class="capsule-status" id="capsuleStatus">Saqlandi va muhrlandi 💌</div>
+      <div class="capsule-saved-list" id="capsuleList"></div>
+    </div>
+  </section>
+
+  <footer>
+    <p class="note">"Sen bilan har bir kun — eng sevimli kunim."</p>
+    <p class="signed">— Elshod</p>
+  </footer>
+
+</main>
+
+<script>
+  // ---------- Firebase: dynamically & safely loaded in the background ----------
+  // Core page (envelope, countdown, editing, add/remove) NEVER depends on this succeeding.
+  let fbReady = false, db = null, storage = null;
+
+  function loadScript(src){
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = () => reject(new Error('load failed: ' + src));
+      document.head.appendChild(s);
+    });
+  }
+
+  const firebaseReady = loadScript('https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js')
+    .then(() => loadScript('https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js'))
+    .then(() => loadScript('https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js'))
+    .then(() => {
+      const firebaseConfig = {
+        apiKey: "AIzaSyBPO8Uqr4th-j3TdTGGqood0Lh3STcd_Qc",
+        authDomain: "heart-94b16.firebaseapp.com",
+        projectId: "heart-94b16",
+        storageBucket: "heart-94b16.firebasestorage.app",
+        messagingSenderId: "963941711368",
+        appId: "1:963941711368:web:abb3cff9b46a6e8cde1bbd"
+      };
+      window.firebase.initializeApp(firebaseConfig);
+      db = window.firebase.firestore();
+      storage = window.firebase.storage();
+      fbReady = true;
+    })
+    .catch(err => {
+      console.warn('Firebase yuklanmadi, sayt lokal rejimda ishlaydi:', err.message);
+      fbReady = false;
+    });
+
+  function isEditingWithin(container){
+    const el = document.activeElement;
+    return container && el && container.contains(el) && el.getAttribute && el.getAttribute('contenteditable') === 'true';
+  }
+  function debounce(fn, ms){
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+  }
+  function makeDoc(name){
+    if (fbReady) return db.collection('giftSite').doc(name);
+    return { set: () => {}, onSnapshot: () => {} };
+  }
+  function uploadFile(path, file, onDone, onFail){
+    if (fbReady){
+      const ref = storage.ref(path);
+      ref.put(file).then(() => ref.getDownloadURL()).then(onDone).catch(onFail);
+    } else {
+      const reader = new FileReader();
+      reader.onload = (e) => onDone(e.target.result);
+      reader.onerror = onFail;
+      reader.readAsDataURL(file);
+    }
+  }
+
+  // ---------- Envelope open ----------
+  const envelope = document.getElementById('envelope');
+  const envScreen = document.getElementById('envelope-screen');
+  const mainEl = document.getElementById('main');
+  envelope.addEventListener('click', () => {
+    if (envelope.classList.contains('open')) return;
+    envelope.classList.add('open');
+    setTimeout(() => {
+      envScreen.classList.add('hidden');
+      mainEl.classList.add('show');
+    }, 1500);
+  });
+
+  // ---------- Countdown to wedding ----------
+  const weddingDate = new Date('2027-10-23T00:00:00');
+  function updateCountdown(){
+    const now = new Date();
+    let diff = weddingDate - now;
+    if (diff < 0) diff = 0;
+    const days = Math.floor(diff / (1000*60*60*24));
+    const hours = Math.floor((diff / (1000*60*60)) % 24);
+    const mins = Math.floor((diff / (1000*60)) % 60);
+    const secs = Math.floor((diff / 1000) % 60);
+    document.getElementById('cd-days').textContent = days;
+    document.getElementById('cd-hours').textContent = String(hours).padStart(2,'0');
+    document.getElementById('cd-mins').textContent = String(mins).padStart(2,'0');
+    document.getElementById('cd-secs').textContent = String(secs).padStart(2,'0');
+  }
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+
+  // ---------- Daily reason (deterministic by day-of-year) ----------
+  const reasons = [
+    "Chunki sen jilmayganingda, butun dunyo to'g'rilanib qoladi.",
+    "Chunki sen bilan sukut ham suhbatdek yoqimli.",
+    "Chunki sen mening eng yaxshi kunlarimni ham, og'ir kunlarimni ham yorug' qilasan.",
+    "Chunki sening ovozing meni tinchlantiradigan yagona kuy.",
+    "Chunki sen bilan kelajak qo'rqinchli emas, aksincha — kutilgan.",
+    "Chunki sen meni eng yaxshi versiyamga aylantirasan.",
+    "Chunki sening kulishing — kuningni yaxshilaydigan sehr.",
+    "Chunki sen bilan har bir oddiy kun ham bayramga aylanadi.",
+    "Chunki sen mening uyim — devorlar emas, sening yoning.",
+    "Chunki sen meni tinglaysan, hatto gapirmaganimda ham.",
+    "Chunki sening qo'llaring — men eng xavfsiz his qiladigan joy.",
+    "Chunki sen bilan orzular ro'yobga chiqadigandek tuyuladi.",
+    "Chunki sen mensiz ham to'liqsan, lekin sen bilan men to'liqroqman.",
+    "Chunki sen meni hech qachon hukm qilmaysan, faqat tushunasan.",
+    "Chunki sening sabring — men ko'rgan eng katta muhabbat belgisi.",
+    "Chunki sen bilan kulgan har bir kulgi yodimda qoladi.",
+    "Chunki sen meni orzularimga ishonishga o'rgatding.",
+    "Chunki sening ko'zlaring hamma narsani gapirib beradi.",
+    "Chunki sen bilan bo'lgan har lahza — keyingi kutish arziydigan lahza.",
+    "Chunki sen — mening 'nihoyat topdim' degan javobim.",
+    "Chunki sening mehringda men hech qachon yolg'iz emasman.",
+    "Chunki sen bilan kelishmovchilik ham bizni yaqinlashtiradi.",
+    "Chunki sening g'amxo'rliging — men ko'rgan eng sokin sevgi tili.",
+    "Chunki sen bilan har bir reja — birga qurilgan orzu.",
+    "Chunki sen meni to'xtatmasdan, balki qanot beribsan.",
+    "Chunki sening qo'lingni ushlaganimda, dunyo kichrayib qoladi.",
+    "Chunki sen — men kutgan barcha ertaklarning javobi.",
+    "Chunki sen bilan uzoq yo'l ham yaqin tuyuladi.",
+    "Chunki sening yoningda men — eng haqiqiy o'zim bo'laman.",
+    "Chunki 23-oktabr — biz uchun yangi boshlanish bo'ladi."
+  ];
+  function dayOfYear(d){
+    const start = new Date(d.getFullYear(), 0, 0);
+    const diff = d - start;
+    return Math.floor(diff / (1000*60*60*24));
+  }
+  const today = new Date();
+  const idx = dayOfYear(today) % reasons.length;
+  document.getElementById('reasonText').textContent = reasons[idx];
+  document.getElementById('reasonDay').textContent = today.toLocaleDateString('uz-UZ', { day:'numeric', month:'long' });
+
+  const flipCard = document.getElementById('flipCard');
+  flipCard.addEventListener('click', () => flipCard.classList.toggle('flipped'));
+
+  // ---------- SONGS: editable, add/remove, audio upload — synced live via Firestore ----------
+  const defaultSongs = [
+    { id:'s1', title:"Qo'shiq nomi 1", note:"Bu yerga qo'shiq bilan bog'liq xotirani yoz", audio:null },
+    { id:'s2', title:"Qo'shiq nomi 2", note:"Bu yerga qo'shiq bilan bog'liq xotirani yoz", audio:null },
+    { id:'s3', title:"Qo'shiq nomi 3", note:"Bu yerga qo'shiq bilan bog'liq xotirani yoz", audio:null }
+  ];
+  let songs = defaultSongs;
+  let songsDoc = makeDoc('songs');
+  const saveSongs = debounce(() => { songsDoc.set({ items: songs }); }, 500);
+
+  let currentAudio = null, currentPlayingId = null;
+
+  function renderSongs(){
+    const wrap = document.getElementById('songList');
+    if (isEditingWithin(wrap)) return;
+    wrap.innerHTML = songs.map(s => `
+      <div class="song" data-id="${s.id}">
+        <div class="song-play" data-play="${s.id}">▶</div>
+        <div class="song-info">
+          <h3 contenteditable="true" data-field="title" data-id="${s.id}" data-placeholder="Qo'shiq nomi">${s.title || ''}</h3>
+          <p contenteditable="true" data-field="note" data-id="${s.id}" data-placeholder="Xotirani shu yerga yoz...">${s.note || ''}</p>
+          <label class="song-audio-label">${s.audio ? '🎵 audio yuklandi — almashtirish' : '🎵 audio fayl yuklash'}
+            <input type="file" accept="audio/*" data-audio="${s.id}">
+          </label>
+        </div>
+        <div class="song-wave"><span></span><span></span><span></span><span></span></div>
+        <button class="song-remove" data-remove="${s.id}" title="O'chirish">✕</button>
+      </div>
+    `).join('');
+
+    wrap.querySelectorAll('[contenteditable]').forEach(el => {
+      el.addEventListener('input', () => {
+        const id = el.dataset.id, field = el.dataset.field;
+        const s = songs.find(x => x.id === id);
+        if (s){ s[field] = el.textContent; saveSongs(); }
+      });
+    });
+    wrap.querySelectorAll('input[type=file][data-audio]').forEach(input => {
+      input.addEventListener('change', () => {
+        const file = input.files[0];
+        if (!file) return;
+        const id = input.dataset.audio;
+        const label = input.closest('.song-audio-label');
+        label.firstChild.textContent = '⏳ yuklanmoqda...';
+        uploadFile('giftSite/songs/' + id + '_' + Date.now() + '_' + file.name, file, url => {
+          const s = songs.find(x => x.id === id);
+          if (s){ s.audio = url; songsDoc.set({ items: songs }); renderSongs(); }
+        }, () => { label.firstChild.textContent = '❌ yuklanmadi, qayta urinib ko\'r'; });
+      });
+    });
+    wrap.querySelectorAll('[data-remove]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (currentPlayingId === btn.dataset.remove && currentAudio){ currentAudio.pause(); currentAudio = null; currentPlayingId = null; }
+        songs = songs.filter(x => x.id !== btn.dataset.remove);
+        songsDoc.set({ items: songs }); renderSongs();
+      });
+    });
+    wrap.querySelectorAll('[data-play]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.play;
+        const s = songs.find(x => x.id === id);
+        const songEl = btn.closest('.song');
+
+        if (currentAudio){ currentAudio.pause(); currentAudio = null; }
+        document.querySelectorAll('.song').forEach(el => { el.classList.remove('playing'); el.querySelector('.song-play').textContent = '▶'; });
+
+        if (currentPlayingId === id){ currentPlayingId = null; return; }
+
+        if (s && s.audio){
+          currentAudio = new Audio(s.audio);
+          currentAudio.play();
+          currentAudio.onended = () => { songEl.classList.remove('playing'); btn.textContent = '▶'; currentPlayingId = null; };
+        }
+        currentPlayingId = id;
+        songEl.classList.add('playing');
+        btn.textContent = '❚❚';
+      });
+    });
+  }
+  renderSongs();
+
+  firebaseReady.then(() => {
+    songsDoc = makeDoc('songs');
+    songsDoc.onSnapshot(snap => {
+      const data = snap.data();
+      songs = (data && data.items) || defaultSongs;
+      renderSongs();
+    });
+  });
+
+  document.getElementById('addSong').addEventListener('click', () => {
+    const id = 's' + Date.now();
+    songs.push({ id, title:"Yangi qo'shiq", note:"Xotirani shu yerga yoz...", audio:null });
+    songsDoc.set({ items: songs }); renderSongs();
+  });
+
+  // ---------- MEMORIES: editable, add/remove, photo upload — synced live via Firestore ----------
+  const defaultMemories = [
+    { id:'m1', date:"Birinchi kun", title:"Tanishganimiz", text:"Bu yerga o'sha kunning hikoyasini yoz — qayerda, qanday, nima his qilganingni.", photo:null },
+    { id:'m2', date:"Unutilmas kun", title:"Birinchi uchrashuv", text:"Bu yerga o'sha kechaning tafsilotlarini yoz.", photo:null },
+    { id:'m3', date:"Muhim kun", title:"Taklif kuni", text:"Bu yerga fotiha yoki taklif kunining hikoyasini yoz.", photo:null },
+    { id:'m4', date:"Kelayotgan kun", title:"23-oktabr, 2027", text:"Bizning to'yimiz — yangi hikoyaning boshlanishi.", photo:null }
+  ];
+  let memories = defaultMemories;
+  let memoriesDoc = makeDoc('memories');
+  const saveMemories = debounce(() => { memoriesDoc.set({ items: memories }); }, 500);
+
+  function renderMemories(){
+    const wrap = document.getElementById('timeline');
+    if (isEditingWithin(wrap)) return;
+    wrap.innerHTML = memories.map(m => `
+      <div class="mem">
+        <div class="mem-card">
+          <button class="mem-remove" data-remove="${m.id}" title="O'chirish">✕</button>
+          <div class="mem-date" contenteditable="true" data-field="date" data-id="${m.id}" data-placeholder="Sana yoki nomi">${m.date || ''}</div>
+          <h3 contenteditable="true" data-field="title" data-id="${m.id}" data-placeholder="Sarlavha">${m.title || ''}</h3>
+          <p contenteditable="true" data-field="text" data-id="${m.id}" data-placeholder="Hikoyani shu yerga yoz...">${m.text || ''}</p>
+          <label class="mem-photo ${m.photo ? 'has-img' : ''}" style="${m.photo ? `background-image:url(${m.photo})` : ''}">
+            <span class="mem-photo-label">📷 <span>Rasm qo'shish uchun bosing</span></span>
+            <input type="file" accept="image/*" data-photo="${m.id}">
+          </label>
+        </div>
+      </div>
+    `).join('');
+
+    wrap.querySelectorAll('[contenteditable]').forEach(el => {
+      el.addEventListener('input', () => {
+        const id = el.dataset.id, field = el.dataset.field;
+        const mem = memories.find(m => m.id === id);
+        if (mem){ mem[field] = el.textContent; saveMemories(); }
+      });
+    });
+    wrap.querySelectorAll('input[type=file][data-photo]').forEach(input => {
+      input.addEventListener('change', () => {
+        const file = input.files[0];
+        if (!file) return;
+        const id = input.dataset.photo;
+        const label = input.closest('.mem-photo');
+        label.querySelector('.mem-photo-label span').textContent = 'Yuklanmoqda...';
+        uploadFile('giftSite/memories/' + id + '_' + Date.now() + '_' + file.name, file, url => {
+          const mem = memories.find(m => m.id === id);
+          if (mem){ mem.photo = url; memoriesDoc.set({ items: memories }); renderMemories(); }
+        }, () => { label.querySelector('.mem-photo-label span').textContent = 'Yuklanmadi, qayta urinib ko\'r'; });
+      });
+    });
+    wrap.querySelectorAll('[data-remove]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        memories = memories.filter(m => m.id !== btn.dataset.remove);
+        memoriesDoc.set({ items: memories }); renderMemories();
+      });
+    });
+  }
+  renderMemories();
+
+  firebaseReady.then(() => {
+    memoriesDoc = makeDoc('memories');
+    memoriesDoc.onSnapshot(snap => {
+      const data = snap.data();
+      memories = (data && data.items) || defaultMemories;
+      renderMemories();
+    });
+  });
+
+  document.getElementById('addMemory').addEventListener('click', () => {
+    const id = 'm' + Date.now();
+    memories.push({ id, date:"Yangi kun", title:"Sarlavha", text:"Hikoyani shu yerga yoz...", photo:null });
+    memoriesDoc.set({ items: memories }); renderMemories();
+  });
+
+  // ---------- Time capsule — synced live via Firestore ----------
+  let capsuleEntries = [];
+  let capsuleDoc = makeDoc('capsule');
+  const capsuleList = document.getElementById('capsuleList');
+
+  function renderCapsuleList(){
+    capsuleList.innerHTML = capsuleEntries.map(e => `
+      <div class="capsule-saved-item">
+        <p>"${e.text}"</p>
+        <span>${e.date}</span>
+      </div>
+    `).join('');
+  }
+  renderCapsuleList();
+
+  firebaseReady.then(() => {
+    capsuleDoc = makeDoc('capsule');
+    capsuleDoc.onSnapshot(snap => {
+      const data = snap.data();
+      capsuleEntries = (data && data.entries) || [];
+      renderCapsuleList();
+    });
+  });
+
+  document.getElementById('capsuleSave').addEventListener('click', () => {
+    const input = document.getElementById('capsuleInput');
+    const text = input.value.trim();
+    if (!text) return;
+    const entry = { text, date: new Date().toLocaleDateString('uz-UZ', { day:'numeric', month:'long', year:'numeric' }) };
+    capsuleEntries.unshift(entry);
+    capsuleDoc.set({ entries: capsuleEntries });
+    input.value = '';
+    const status = document.getElementById('capsuleStatus');
+    status.classList.add('show');
+    setTimeout(() => status.classList.remove('show'), 2500);
+  });
+</script>
+
+</body>
+</html>

@@ -316,6 +316,10 @@
   </div>
 </div>
 
+<div id="fbStatus" style="position:fixed; bottom:10px; left:10px; right:10px; z-index:999; background:rgba(43,27,36,.95); color:#F6EEE0; font-family:Manrope,sans-serif; font-size:12px; padding:10px 14px; border-radius:10px; max-width:480px; margin:0 auto; box-shadow:0 4px 14px rgba(0,0,0,.3); line-height:1.5;">
+  🔄 Bulutga ulanmoqda...
+</div>
+
 <main id="main">
 
   <!-- HERO -->
@@ -338,7 +342,7 @@
   <!-- MEMORIES -->
   <section id="memories">
     <div class="section-head">
-      <div class="eyebrow">Yo'limiz</div>
+      <div class="eyebrow">01 — Yo'limiz</div>
       <h2>Bizning xotiralarimiz</h2>
       <p>Har bir nuqta — biz birga bosib o'tgan bir kun</p>
     </div>
@@ -353,7 +357,7 @@
   <!-- DAILY REASON -->
   <section id="reasons">
     <div class="section-head">
-      <div class="eyebrow">Har kuni bittadan</div>
+      <div class="eyebrow">02 — Har kuni bittadan</div>
       <h2>Bugun seni nega sevaman</h2>
       <p>Har kuni yangi sabab — kartani bosib och</p>
     </div>
@@ -379,7 +383,7 @@
   <!-- SONGS -->
   <section id="songs">
     <div class="section-head">
-      <div class="eyebrow">Ovozimiz</div>
+      <div class="eyebrow">03 — Ovozimiz</div>
       <h2>Bizning qo'shiqlarimiz</h2>
       <p>Har birining ortida bir xotira bor</p>
     </div>
@@ -394,7 +398,7 @@
   <!-- TIME CAPSULE -->
   <section id="capsule">
     <div class="section-head">
-      <div class="eyebrow">Kelajakka xat</div>
+      <div class="eyebrow">04 — Kelajakka xat</div>
       <h2>Vaqt kapsulasi</h2>
       <p>To'yimizgacha bo'lgan his-tuyg'ularingni yoz — 2027-yil 23-oktabrda birga o'qiymiz</p>
     </div>
@@ -452,7 +456,16 @@
     .catch(err => {
       console.warn('Firebase yuklanmadi, sayt lokal rejimda ishlaydi:', err.message);
       fbReady = false;
+      showStatus('❌ Firebase ulanmadi: ' + err.message + ' — lokal rejimda ishlayapti (saqlanmaydi)');
     });
+
+  function showStatus(text){
+    const el = document.getElementById('fbStatus');
+    if (el) el.textContent = text;
+  }
+  firebaseReady.then(() => {
+    if (fbReady) showStatus('✅ Bulutga ulandi — yozganlaringiz ikkala tomonga ham saqlanadi');
+  });
 
   function isEditingWithin(container){
     const el = document.activeElement;
@@ -462,14 +475,24 @@
     let t;
     return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
   }
+  function wrapDoc(doc){
+    const originalSet = doc.set.bind(doc);
+    doc.set = (data) => originalSet(data).catch(err => {
+      showStatus('❌ Saqlashda xato: ' + err.message + ' (kod: ' + (err.code || '?') + ')');
+    });
+    return doc;
+  }
   function makeDoc(name){
-    if (fbReady) return db.collection('giftSite').doc(name);
+    if (fbReady) return wrapDoc(db.collection('giftSite').doc(name));
     return { set: () => {}, onSnapshot: () => {} };
   }
   function uploadFile(path, file, onDone, onFail){
     if (fbReady){
       const ref = storage.ref(path);
-      ref.put(file).then(() => ref.getDownloadURL()).then(onDone).catch(onFail);
+      ref.put(file).then(() => ref.getDownloadURL()).then(onDone).catch(err => {
+        showStatus('❌ Fayl yuklashda xato: ' + err.message + ' (kod: ' + (err.code || '?') + ')');
+        onFail(err);
+      });
     } else {
       const reader = new FileReader();
       reader.onload = (e) => onDone(e.target.result);
@@ -643,7 +666,7 @@
       const data = snap.data();
       songs = (data && data.items) || defaultSongs;
       renderSongs();
-    });
+    }, err => showStatus('❌ O\'qishda xato: ' + err.message + ' (kod: ' + (err.code || '?') + ')'));
   });
 
   document.getElementById('addSong').addEventListener('click', () => {
@@ -716,7 +739,7 @@
       const data = snap.data();
       memories = (data && data.items) || defaultMemories;
       renderMemories();
-    });
+    }, err => showStatus('❌ O\'qishda xato: ' + err.message + ' (kod: ' + (err.code || '?') + ')'));
   });
 
   document.getElementById('addMemory').addEventListener('click', () => {
@@ -746,7 +769,7 @@
       const data = snap.data();
       capsuleEntries = (data && data.entries) || [];
       renderCapsuleList();
-    });
+    }, err => showStatus('❌ O\'qishda xato: ' + err.message + ' (kod: ' + (err.code || '?') + ')'));
   });
 
   document.getElementById('capsuleSave').addEventListener('click', () => {
